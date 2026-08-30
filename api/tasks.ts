@@ -1,4 +1,5 @@
 import type { AppState } from "../src/types"
+import { createClient, type RedisClientType } from "redis"
 
 interface ApiRequest {
   method?: string
@@ -17,30 +18,45 @@ const PASSWORD = process.env.APP_PASSWORD || "ilovemysensen"
 
 const SEED_STATE: AppState = { tasks: [] }
 
-function getRedisConfig() {
+let redisClientPromise: Promise<RedisClientType> | null = null
+
+async function getRedisCloudClient() {
+  const url = process.env.REDIS_URL
+  if (!url) return null
+
+  if (!redisClientPromise) {
+    const client = createClient({ url })
+    client.on("error", (error) => console.error("Redis Cloud error:", error))
+    redisClientPromise = client.connect().then(() => client as RedisClientType)
+  }
+
+  return redisClientPromise
+}
+
+function getRestRedisConfig() {
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
   const token =
     process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
 
-  if (!url || !token) {
-    throw new Error("Missing Vercel Redis storage environment variables.")
-  }
+  if (!url || !token) return null
 
   return { url: url.replace(/\/$/, ""), token }
 }
 
-async function redisCommand<T>(command: unknown[]): Promise<T | null> {
-  const { url, token } = getRedisConfig()
-  const response = await fetch(`${url}/pipeline`, {
+async function redisRestCommand<T>(command: unknown[]): Promise<T | null> {
+  const config = getRestRedisConfig()
+  if (!config) return null
+
+  const response = await fetch(`${config.url}/pipeline`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${config.token}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify([command]),
   })
 
-  if (!response.ok) throw new Error("Unable to access Vercel Redis storage.")
+  if (!response.ok) throw new Error("Unable to access Redis REST storage.")
 
   const [result] = await response.json()
   if (result.error) throw new Error(result.error)
@@ -48,14 +64,32 @@ async function redisCommand<T>(command: unknown[]): Promise<T | null> {
 }
 
 async function getState() {
-  const raw = await redisCommand<string | null>(["GET", TASKS_KEY])
+  const redis = await getRedisCloudClient()
+  if (redis) {
+    const raw = await redis.get(TASKS_KEY)
+    return raw ? (JSON.parse(raw) as AppState) : null
+  }
+
+  const raw = await redisRestCommand<string | null>(["GET", TASKS_KEY])
   if (!raw) return null
   if (typeof raw === "string") return JSON.parse(raw) as AppState
   return raw as AppState
 }
 
 async function setState(state: AppState) {
-  await redisCommand<string>(["SET", TASKS_KEY, JSON.stringify(state)])
+  const redis = await getRedisCloudClient()
+  if (redis) {
+    await redis.set(TASKS_KEY, JSON.stringify(state))
+    return
+  }
+
+  if (!getRestRedisConfig()) {
+    throw new Error(
+      "Missing Redis storage environment variables. Connect Redis Cloud or configure KV_REST_API_URL/KV_REST_API_TOKEN.",
+    )
+  }
+
+  await redisRestCommand<string>(["SET", TASKS_KEY, JSON.stringify(state)])
 }
 
 function unauthorized(response: ApiResponse) {
@@ -120,7 +154,7 @@ export default async function handler(
     const message =
       error instanceof Error
         ? error.message
-        : "Unable to access Vercel storage."
+        : "Unable to access Redis storage."
     return response.status(500).json({ error: message })
   }
 }
