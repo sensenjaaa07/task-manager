@@ -77,16 +77,20 @@ export default function Tasks({ tasks, onAddTask, onUpdateTask, onDeleteTask }: 
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 sm:px-6 py-3 sm:py-4 border-b" style={{ borderColor: "var(--border)" }}>
-        <select className="sm:hidden w-full text-sm font-bold rounded-xl px-3 py-2.5 outline-none" style={{ background: "var(--secondary)", color: "var(--foreground)", border: "1px solid var(--border)" }} value={filterStatus} onChange={(event) => setFilterStatus(event.target.value as FilterStatus)} aria-label="Filter tasks by status">
-          <option value="all">All tasks</option><option value="todo">Todo</option><option value="in_progress">In progress</option><option value="done">Done</option>
-        </select>
-        <div className="hidden sm:flex gap-1">
-          {(["all", "todo", "in_progress", "done"] as const).map((status) => <button key={status} onClick={() => setFilterStatus(status)} className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-3 py-2 rounded-xl whitespace-nowrap" style={{ background: filterStatus === status ? "var(--primary)" : "var(--secondary)", color: filterStatus === status ? "white" : "var(--muted-foreground)" }}>{status === "all" ? "ALL" : status === "todo" ? "TODO" : status === "in_progress" ? "IN PROGRESS" : "DONE"}</button>)}
-        </div>
-        <div className="flex items-center gap-2 mt-3 flex-wrap">
-          <select className="text-[10px] rounded-xl px-2.5 py-2 outline-none" style={{ background: "var(--secondary)", color: "var(--muted-foreground)", border: "1px solid var(--border)" }} value={filterPriority} onChange={(event) => setFilterPriority(event.target.value as Priority | "all")}><option value="all">ALL PRIORITIES</option><option value="critical">CRITICAL</option><option value="high">HIGH</option><option value="medium">MEDIUM</option><option value="low">LOW</option></select>
-          <select className="text-[10px] rounded-xl px-2.5 py-2 outline-none" style={{ background: "var(--secondary)", color: "var(--muted-foreground)", border: "1px solid var(--border)" }} value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}><option value="score">PRIORITY SCORE</option><option value="due">DUE DATE</option><option value="priority">PRIORITY LEVEL</option><option value="created">NEWEST</option></select>
-          <button onClick={() => setModal("new")} className="ml-auto text-sm font-bold px-4 py-2 rounded-xl" style={{ background: "var(--primary)", color: "white" }}>+ New task</button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2">
+          <select className="sm:hidden w-full text-sm font-bold rounded-xl px-3 py-2.5 outline-none" style={{ background: "var(--secondary)", color: "var(--foreground)", border: "1px solid var(--border)" }} value={filterStatus} onChange={(event) => setFilterStatus(event.target.value as FilterStatus)} aria-label="Filter tasks by status">
+            <option value="all">All tasks</option><option value="todo">Todo</option><option value="in_progress">In progress</option><option value="done">Done</option>
+          </select>
+
+          <div className="hidden sm:flex items-center gap-1 shrink-0">
+            {(["all", "todo", "in_progress", "done"] as const).map((status) => <button key={status} onClick={() => setFilterStatus(status)} className="text-[9px] sm:text-[10px] font-bold px-2.5 sm:px-3 py-2 rounded-xl whitespace-nowrap" style={{ background: filterStatus === status ? "var(--primary)" : "var(--secondary)", color: filterStatus === status ? "white" : "var(--muted-foreground)" }}>{status === "all" ? "ALL" : status === "todo" ? "TODO" : status === "in_progress" ? "IN PROGRESS" : "DONE"}</button>)}
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:ml-1">
+            <select className="text-[10px] rounded-xl px-2.5 py-2 outline-none shrink-0" style={{ background: "var(--secondary)", color: "var(--muted-foreground)", border: "1px solid var(--border)" }} value={filterPriority} onChange={(event) => setFilterPriority(event.target.value as Priority | "all")}><option value="all">ALL PRIORITIES</option><option value="critical">CRITICAL</option><option value="high">HIGH</option><option value="medium">MEDIUM</option><option value="low">LOW</option></select>
+            <select className="text-[10px] rounded-xl px-2.5 py-2 outline-none shrink-0" style={{ background: "var(--secondary)", color: "var(--muted-foreground)", border: "1px solid var(--border)" }} value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}><option value="score">PRIORITY SCORE</option><option value="due">DUE DATE</option><option value="priority">PRIORITY LEVEL</option><option value="created">NEWEST</option></select>
+            <button onClick={() => setModal("new")} className="sm:ml-auto text-sm font-bold px-4 py-2 rounded-xl whitespace-nowrap" style={{ background: "var(--primary)", color: "white" }}>+ New task</button>
+          </div>
         </div>
       </div>
 
