@@ -103,7 +103,7 @@ function LoginScreen({
           className="text-sm text-center mt-2 leading-relaxed"
           style={{ color: "var(--muted-foreground)" }}
         >
-          Use the shared practice login to sync tasks through Vercel storage.
+          Use the shared practice login to sync tasks across devices.
         </p>
 
         <label className="block text-xs font-bold mt-6 mb-2" htmlFor="username">
@@ -199,7 +199,7 @@ export default function App() {
               className="text-[10px] mt-0.5"
               style={{ color: "var(--muted-foreground)" }}
             >
-              Synced with Vercel
+              Synced across devices
             </p>
           </div>
         </div>
