@@ -27,7 +27,7 @@ async function getRedisCloudClient() {
 
   if (!redisClient) {
     redisClient = createClient({ url })
-    redisClient.on("error", (error) => console.error("Redis Cloud error:", error))
+    redisClient.on("error", (error) => console.error("Storage error:", error))
   }
 
   if (!redisConnectPromise) {
@@ -61,7 +61,7 @@ async function redisRestCommand<T>(command: unknown[]): Promise<T | null> {
     body: JSON.stringify([command]),
   })
 
-  if (!response.ok) throw new Error("Unable to access Redis REST storage.")
+  if (!response.ok) throw new Error("Unable to access shared storage.")
 
   const [result] = await response.json()
   if (result.error) throw new Error(result.error)
@@ -89,9 +89,7 @@ async function setState(state: AppState) {
   }
 
   if (!getRestRedisConfig()) {
-    throw new Error(
-      "Missing Redis storage environment variables. Connect Redis Cloud or configure KV_REST_API_URL/KV_REST_API_TOKEN.",
-    )
+    throw new Error("Shared storage is not configured. Please contact the administrator.")
   }
 
   await redisRestCommand<string>(["SET", TASKS_KEY, JSON.stringify(state)])
@@ -157,9 +155,7 @@ export default async function handler(
     return response.status(200).json(request.body)
   } catch (error) {
     const message =
-      error instanceof Error
-        ? error.message
-        : "Unable to access Redis storage."
+      error instanceof Error ? error.message : "Unable to access shared storage."
     return response.status(500).json({ error: message })
   }
 }
