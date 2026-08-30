@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme inline {
+  --color-background: var(--background); --color-foreground: var(--foreground); --color-card: var(--card); --color-card-foreground: var(--card-foreground); --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground); --color-secondary: var(--secondary); --color-secondary-foreground: var(--secondary-foreground); --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground); --color-accent: var(--accent); --color-accent-foreground: var(--accent-foreground); --color-border: var(--border); --color-ring: var(--ring); --font-sans: 'DM Sans', sans-serif;
+}
+
+:root { --background: #fff8fa; --foreground: #493540; --card: #ffffff; --card-foreground: #493540; --primary: #e36b91; --primary-foreground: #ffffff; --secondary: #fcebf1; --secondary-foreground: #7e5063; --muted: #fff1f5; --muted-foreground: #997281; --accent: #c95a7d; --accent-foreground: #ffffff; --border: #f4dce5; --ring: #e36b91; --radius: 16px; --priority-critical: #d65d74; --priority-high: #ed9467; --priority-medium: #d99f45; --priority-low: #7bbb9d; --diff-easy: #7bbb9d; --diff-medium: #d99f45; --diff-hard: #ed9467; --diff-expert: #d65d74; }
+html, body, #root { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--background); color: var(--foreground); }
+body { margin: 0; }
+* { box-sizing: border-box; }
+button, select, input, textarea { font: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+::-webkit-scrollbar { width: 5px; height: 5px; } ::-webkit-scrollbar-thumb { background: #eec8d6; border-radius: 4px; }
+.hover-secondary:hover { background: var(--secondary); }
+.mono { font-family: 'DM Sans', sans-serif; letter-spacing: .03em; }
+.brand-mark { width: 34px; height: 34px; display: grid; place-items: center; flex-shrink: 0; border-radius: 13px; color: white; font-size: 15px; background: linear-gradient(135deg, #ef91ae, #d85880); box-shadow: 0 5px 12px #dd78904d; }
+.nav-button { min-height: 47px; display: flex; align-items: center; gap: 13px; border-radius: 13px; border: 0; padding: 0 13px; color: var(--muted-foreground); background: transparent; font-size: 14px; font-weight: 600; cursor: pointer; text-align: left; } .nav-button:hover { background: var(--secondary); color: var(--primary); } .nav-button[data-active="true"] { color: var(--primary); background: var(--secondary); } .nav-count { margin-left: auto; display: grid; place-items: center; min-width: 21px; height: 21px; padding: 0 5px; border-radius: 999px; background: var(--primary); color: white; font-size: 10px; }
+.mobile-nav { position: fixed; z-index: 40; bottom: 0; left: 0; right: 0; height: calc(64px + env(safe-area-inset-bottom)); padding: 7px 14px env(safe-area-inset-bottom); display: flex; justify-content: space-around; border-top: 1px solid var(--border); background: rgba(255,255,255,.96); backdrop-filter: blur(12px); } .mobile-nav-button { position: relative; min-width: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--muted-foreground); border: 0; background: transparent; font-size: 10px; font-weight: 700; cursor: pointer; } .mobile-nav-button[data-active="true"] { color: var(--primary); } .mobile-nav-button i { position: absolute; top: 3px; margin-left: 27px; min-width: 16px; height: 16px; display: grid; place-items: center; border-radius: 99px; padding: 0 3px; font-size: 9px; font-style: normal; color: white; background: var(--primary); }
+.app-main { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+@media (min-width: 768px) { .app-main { padding-bottom: 0; } .mobile-nav { display: none !important; } .desktop-sidebar { display: flex !important; } }
+@media (max-width: 640px) { .app-shell { min-height: 100dvh; } }
