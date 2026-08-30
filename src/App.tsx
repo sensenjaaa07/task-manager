@@ -193,7 +193,7 @@ export default function App() {
               className="text-[10px] mt-0.5"
               style={{ color: "var(--muted-foreground)" }}
             >
-              Synced across devices
+              Synced with Vercel
             </p>
           </div>
         </div>
