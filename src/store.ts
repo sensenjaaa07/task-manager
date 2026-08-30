@@ -182,7 +182,7 @@ export function useTaskStore() {
         setError(
           err instanceof Error
             ? err.message
-            : "Unable to save tasks to Vercel storage.",
+            : "Unable to save tasks to shared storage.",
         )
       }
     },
@@ -207,7 +207,7 @@ export function useTaskStore() {
         setError(
           err instanceof Error
             ? err.message
-            : "Unable to load tasks from Vercel storage.",
+            : "Unable to load tasks from shared storage.",
         )
       })
       .finally(() => {
