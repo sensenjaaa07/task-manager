@@ -1,0 +1,126 @@
+import type { AppState } from "../src/types"
+
+interface ApiRequest {
+  method?: string
+  headers: Record<string, string | string[] | undefined>
+  body?: unknown
+}
+
+interface ApiResponse {
+  setHeader(name: string, value: string): void
+  status(code: number): { json(body: unknown): void }
+}
+
+const TASKS_KEY = "chichi-dental-tasks"
+const USERNAME = process.env.APP_USERNAME || "Dr Carla"
+const PASSWORD = process.env.APP_PASSWORD || "ilovemysensen"
+
+const SEED_STATE: AppState = { tasks: [] }
+
+function getRedisConfig() {
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+  const token =
+    process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
+
+  if (!url || !token) {
+    throw new Error("Missing Vercel Redis storage environment variables.")
+  }
+
+  return { url: url.replace(/\/$/, ""), token }
+}
+
+async function redisCommand<T>(command: unknown[]): Promise<T | null> {
+  const { url, token } = getRedisConfig()
+  const response = await fetch(`${url}/pipeline`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify([command]),
+  })
+
+  if (!response.ok) throw new Error("Unable to access Vercel Redis storage.")
+
+  const [result] = await response.json()
+  if (result.error) throw new Error(result.error)
+  return result.result ?? null
+}
+
+async function getState() {
+  const raw = await redisCommand<string | null>(["GET", TASKS_KEY])
+  if (!raw) return null
+  if (typeof raw === "string") return JSON.parse(raw) as AppState
+  return raw as AppState
+}
+
+async function setState(state: AppState) {
+  await redisCommand<string>(["SET", TASKS_KEY, JSON.stringify(state)])
+}
+
+function unauthorized(response: ApiResponse) {
+  response.setHeader("WWW-Authenticate", 'Basic realm="Chichi Dental Tasks"')
+  return response.status(401).json({ error: "Invalid username or password." })
+}
+
+function headerValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value
+}
+
+function isAuthorized(request: ApiRequest) {
+  const header = headerValue(request.headers.authorization)
+  if (!header?.startsWith("Basic ")) return false
+
+  const decoded = Buffer.from(header.slice("Basic ".length), "base64").toString(
+    "utf8",
+  )
+  const separator = decoded.indexOf(":")
+  if (separator === -1) return false
+
+  const username = decoded.slice(0, separator)
+  const password = decoded.slice(separator + 1)
+  return username === USERNAME && password === PASSWORD
+}
+
+function isAppState(value: unknown): value is AppState {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      Array.isArray((value as AppState).tasks),
+  )
+}
+
+export default async function handler(
+  request: ApiRequest,
+  response: ApiResponse,
+) {
+  if (!isAuthorized(request)) return unauthorized(response)
+
+  if (request.method !== "GET" && request.method !== "PUT") {
+    response.setHeader("Allow", "GET, PUT")
+    return response.status(405).json({ error: "Method not allowed." })
+  }
+
+  try {
+    if (request.method === "GET") {
+      const state = await getState()
+      if (state) return response.status(200).json(state)
+
+      await setState(SEED_STATE)
+      return response.status(200).json(SEED_STATE)
+    }
+
+    if (!isAppState(request.body)) {
+      return response.status(400).json({ error: "Invalid task data." })
+    }
+
+    await setState(request.body)
+    return response.status(200).json(request.body)
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unable to access Vercel storage."
+    return response.status(500).json({ error: message })
+  }
+}
