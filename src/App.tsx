@@ -99,12 +99,6 @@ function LoginScreen({
           Chichi Dental Tasks
         </p>
         <h1 className="text-2xl font-bold text-center mt-2">Sign in</h1>
-        <p
-          className="text-sm text-center mt-2 leading-relaxed"
-          style={{ color: "var(--muted-foreground)" }}
-        >
-          Use the shared practice login to sync tasks across devices.
-        </p>
 
         <label className="block text-xs font-bold mt-6 mb-2" htmlFor="username">
           Username
