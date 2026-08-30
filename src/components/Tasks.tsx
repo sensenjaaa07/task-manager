@@ -4,52 +4,31 @@ import { sortedByScore, daysUntilDue, dueLabel, dueLabelClass, taskScore } from 
 import { PriorityBadge, DifficultyBadge, StatusDot } from "./shared";
 import TaskModal from "./TaskModal";
 
-interface Props {
-  tasks: Task[];
-  onAddTask: (data: Omit<Task, "id" | "createdAt">) => void;
-  onUpdateTask: (id: string, patch: Partial<Task>) => void;
-  onDeleteTask: (id: string) => void;
-}
-
+interface Props { tasks: Task[]; onAddTask: (data: Omit<Task, "id" | "createdAt">) => void; onUpdateTask: (id: string, patch: Partial<Task>) => void; onDeleteTask: (id: string) => void; }
 type SortMode = "score" | "due" | "priority" | "created";
 type FilterStatus = "all" | Status;
-
-const DETAIL_MESSAGES = [
-  "One small step at a time, baby. I love you and you've got this.",
-  "Good luck, baby. You are more capable than you know.",
-  "Take a breath, baby. I am always cheering for you.",
-  "You are doing beautifully. Finish this one at your own pace.",
-];
+type Toast = { message: string } | null;
+const DETAIL_MESSAGES = ["One small step at a time, baby. I love you and you've got this.", "Good luck, baby. You are more capable than you know.", "Take a breath, baby. I am always cheering for you.", "You are doing beautifully. Finish this one at your own pace."];
 
 function TaskDetails({ task, onClose, onEdit, onAdvance, onDelete }: { task: Task; onClose: () => void; onEdit: () => void; onAdvance: () => void; onDelete: () => void }) {
   const days = daysUntilDue(task.dueDate);
   const action = task.status === "todo" ? "Start this task" : task.status === "in_progress" ? "Mark as done" : "Bring it back";
   const encouragement = task.status === "done" ? "You did it, baby. I am so proud of you." : DETAIL_MESSAGES[task.id.length % DETAIL_MESSAGES.length];
+  return <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#493540]/30 p-0 sm:p-4" onClick={(event) => event.target === event.currentTarget && onClose()}>
+    <section className="w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 max-h-[90dvh] overflow-y-auto" style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 -8px 30px rgba(146,80,105,.16)" }} aria-label="Task details">
+      <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold tracking-[.16em] uppercase" style={{ color: "var(--primary)" }}>Care task</p><h2 className="text-xl font-bold mt-1 leading-tight">{task.title}</h2></div><button onClick={onClose} className="w-9 h-9 rounded-full text-lg" style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }} aria-label="Close details">x</button></div>
+      <div className="mt-5 rounded-2xl p-4" style={{ background: "var(--secondary)" }}><p className="text-sm leading-relaxed">{encouragement}</p></div>
+      {task.description && <p className="text-sm leading-relaxed mt-5" style={{ color: "var(--muted-foreground)" }}>{task.description}</p>}
+      <div className="flex flex-wrap gap-2 mt-5"><PriorityBadge priority={task.priority} /><DifficultyBadge difficulty={task.difficulty} /><span className={`mono text-[10px] px-2 py-1 rounded-full ${dueLabelClass(days)}`} style={{ background: "var(--muted)" }}>{dueLabel(days)}</span></div>
+      {task.tags.length > 0 && <div className="flex flex-wrap gap-2 mt-3">{task.tags.map((tag) => <span key={tag} className="text-[11px] px-2 py-1 rounded-full" style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>{tag}</span>)}</div>}
+      <div className="grid grid-cols-2 gap-2 mt-6"><button onClick={onAdvance} className="py-3 rounded-xl text-sm font-bold" style={{ background: "var(--primary)", color: "white" }}>{action}</button><button onClick={onEdit} className="py-3 rounded-xl text-sm font-semibold" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>Edit task</button></div>
+      <button onClick={onDelete} className="w-full mt-3 py-2 text-xs font-semibold" style={{ color: "#d65d74" }}>Delete task</button>
+    </section>
+  </div>;
+}
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#493540]/30 p-0 sm:p-4" onClick={(event) => event.target === event.currentTarget && onClose()}>
-      <section className="w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 max-h-[90dvh] overflow-y-auto" style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 -8px 30px rgba(146,80,105,.16)" }} aria-label="Task details">
-        <div className="flex items-start justify-between gap-4">
-          <div><p className="text-[10px] font-bold tracking-[.16em] uppercase" style={{ color: "var(--primary)" }}>Care task</p><h2 className="text-xl font-bold mt-1 leading-tight">{task.title}</h2></div>
-          <button onClick={onClose} className="w-9 h-9 rounded-full text-lg" style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }} aria-label="Close details">x</button>
-        </div>
-
-        <div className="mt-5 rounded-2xl p-4" style={{ background: "var(--secondary)" }}>
-          <p className="text-sm leading-relaxed">{encouragement}</p>
-        </div>
-        {task.description && <p className="text-sm leading-relaxed mt-5" style={{ color: "var(--muted-foreground)" }}>{task.description}</p>}
-
-        <div className="flex flex-wrap gap-2 mt-5"><PriorityBadge priority={task.priority} /><DifficultyBadge difficulty={task.difficulty} /><span className={`mono text-[10px] px-2 py-1 rounded-full ${dueLabelClass(days)}`} style={{ background: "var(--muted)" }}>{dueLabel(days)}</span></div>
-        {task.tags.length > 0 && <div className="flex flex-wrap gap-2 mt-3">{task.tags.map((tag) => <span key={tag} className="text-[11px] px-2 py-1 rounded-full" style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>{tag}</span>)}</div>}
-
-        <div className="grid grid-cols-2 gap-2 mt-6">
-          <button onClick={onAdvance} className="py-3 rounded-xl text-sm font-bold" style={{ background: "var(--primary)", color: "white" }}>{action}</button>
-          <button onClick={onEdit} className="py-3 rounded-xl text-sm font-semibold" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>Edit task</button>
-        </div>
-        <button onClick={onDelete} className="w-full mt-3 py-2 text-xs font-semibold" style={{ color: "#d65d74" }}>Delete task</button>
-      </section>
-    </div>
-  );
+function ToastNotification({ toast, onClose }: { toast: Exclude<Toast, null>; onClose: () => void }) {
+  return <div className="fixed top-5 left-1/2 z-[90] -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm" role="status" aria-live="polite"><div className="rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3" style={{ background: "var(--card)", border: "1px solid #9acbb1", color: "var(--foreground)" }}><span className="w-7 h-7 rounded-full grid place-items-center text-sm font-bold" style={{ background: "#e8f5ee", color: "#4f9a74" }}>✓</span><p className="flex-1 text-sm font-semibold">{toast.message}</p><button onClick={onClose} className="text-lg leading-none opacity-50 hover:opacity-100" aria-label="Close notification">×</button></div></div>;
 }
 
 export default function Tasks({ tasks, onAddTask, onUpdateTask, onDeleteTask }: Props) {
@@ -59,58 +38,27 @@ export default function Tasks({ tasks, onAddTask, onUpdateTask, onDeleteTask }: 
   const [filterPriority, setFilterPriority] = useState<Priority | "all">("all");
   const [sortMode, setSortMode] = useState<SortMode>("score");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [toast, setToast] = useState<Toast>(null);
+  const notify = (message: string) => { setToast({ message }); window.setTimeout(() => setToast(null), 3000); };
 
   let filtered = tasks;
   if (filterStatus !== "all") filtered = filtered.filter((task) => task.status === filterStatus);
   if (filterPriority !== "all") filtered = filtered.filter((task) => task.priority === filterPriority);
-  const sorted = (() => {
-    if (sortMode === "score") return sortedByScore(filtered);
-    if (sortMode === "due") return [...filtered].sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
-    if (sortMode === "priority") {
-      const priorityOrder: Record<Priority, number> = { critical: 0, high: 1, medium: 2, low: 3 };
-      return [...filtered].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-    }
-    return [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  })();
-  const advance = (task: Task) => { const next: Record<Status, Status> = { todo: "in_progress", in_progress: "done", done: "todo" }; onUpdateTask(task.id, { status: next[task.status] }); };
+  const sorted = (() => { if (sortMode === "score") return sortedByScore(filtered); if (sortMode === "due") return [...filtered].sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()); if (sortMode === "priority") { const priorityOrder: Record<Priority, number> = { critical: 0, high: 1, medium: 2, low: 3 }; return [...filtered].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]); } return [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); })();
+  const advance = (task: Task) => { const next: Record<Status, Status> = { todo: "in_progress", in_progress: "done", done: "todo" }; const nextStatus = next[task.status]; onUpdateTask(task.id, { status: nextStatus }); setDetailTask((current) => current?.id === task.id ? { ...current, status: nextStatus } : current); notify(nextStatus === "in_progress" ? "Task started successfully." : nextStatus === "done" ? "Task marked as done successfully." : "Task brought back to To Do."); };
+  const confirmDelete = () => { if (!detailTask) return; onDeleteTask(detailTask.id); setDetailTask(null); setDeleteConfirm(null); notify("Task deleted successfully."); };
 
-  return (
-    <div className="flex flex-col h-full">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b" style={{ borderColor: "var(--border)" }}>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2">
-          <select className="sm:hidden w-full text-sm font-bold rounded-xl px-3 py-2.5 outline-none" style={{ background: "var(--secondary)", color: "var(--foreground)", border: "1px solid var(--border)" }} value={filterStatus} onChange={(event) => setFilterStatus(event.target.value as FilterStatus)} aria-label="Filter tasks by status">
-            <option value="all">All tasks</option><option value="todo">Todo</option><option value="in_progress">In progress</option><option value="done">Done</option>
-          </select>
-
-          <div className="hidden sm:flex items-center gap-1 shrink-0">
-            {(["all", "todo", "in_progress", "done"] as const).map((status) => <button key={status} onClick={() => setFilterStatus(status)} className="text-[9px] sm:text-[10px] font-bold px-2.5 sm:px-3 py-2 rounded-xl whitespace-nowrap" style={{ background: filterStatus === status ? "var(--primary)" : "var(--secondary)", color: filterStatus === status ? "white" : "var(--muted-foreground)" }}>{status === "all" ? "ALL" : status === "todo" ? "TODO" : status === "in_progress" ? "IN PROGRESS" : "DONE"}</button>)}
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:ml-1">
-            <select className="text-[10px] rounded-xl px-2.5 py-2 outline-none shrink-0" style={{ background: "var(--secondary)", color: "var(--muted-foreground)", border: "1px solid var(--border)" }} value={filterPriority} onChange={(event) => setFilterPriority(event.target.value as Priority | "all")}><option value="all">ALL PRIORITIES</option><option value="critical">CRITICAL</option><option value="high">HIGH</option><option value="medium">MEDIUM</option><option value="low">LOW</option></select>
-            <select className="text-[10px] rounded-xl px-2.5 py-2 outline-none shrink-0" style={{ background: "var(--secondary)", color: "var(--muted-foreground)", border: "1px solid var(--border)" }} value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}><option value="score">PRIORITY SCORE</option><option value="due">DUE DATE</option><option value="priority">PRIORITY LEVEL</option><option value="created">NEWEST</option></select>
-            <button onClick={() => setModal("new")} className="sm:ml-auto text-sm font-bold px-4 py-2 rounded-xl whitespace-nowrap" style={{ background: "var(--primary)", color: "white" }}>+ New task</button>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-4 sm:px-6 py-2"><span className="text-[10px] font-bold tracking-wider" style={{ color: "var(--muted-foreground)" }}>{sorted.length} TASK{sorted.length === 1 ? "" : "S"} FOR CHICHI</span></div>
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-5 space-y-3">
-        {sorted.length === 0 ? <div className="flex flex-col items-center justify-center h-full gap-2" style={{ color: "var(--muted-foreground)" }}><p className="text-sm">Nothing here yet. You are doing great, Chichi.</p></div> : sorted.map((task) => {
-          const days = daysUntilDue(task.dueDate); const score = taskScore(task);
-          return <article key={task.id} role="button" tabIndex={0} onClick={() => setDetailTask(task)} onKeyDown={(event) => event.key === "Enter" && setDetailTask(task)} className="task-card cursor-pointer rounded-2xl p-4 sm:p-5 transition-transform hover:-translate-y-0.5" style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 5px 15px rgba(146,80,105,.05)" }}>
-            <div className="flex items-start gap-3">
-              <button onClick={(event) => { event.stopPropagation(); advance(task); }} className="mt-0.5 w-7 h-7 rounded-full grid place-items-center" style={{ background: "var(--secondary)" }} aria-label="Advance task status"><StatusDot status={task.status} /></button>
-              <div className="flex-1 min-w-0"><div className="flex justify-between gap-3"><h3 className={`text-base font-bold leading-snug ${task.status === "done" ? "line-through opacity-50" : ""}`}>{task.title}</h3>{task.status !== "done" && <span className="text-sm font-bold" style={{ color: "var(--primary)" }}>{score}</span>}</div><p className="text-xs mt-1.5 line-clamp-2 leading-relaxed" style={{ color: "var(--muted-foreground)" }}>{task.description || "Tap to view this task's details."}</p><div className="flex items-center gap-2 flex-wrap mt-3"><PriorityBadge priority={task.priority} /><DifficultyBadge difficulty={task.difficulty} /><span className={`text-[10px] font-semibold ${dueLabelClass(days)}`}>{dueLabel(days)}</span></div></div>
-            </div>
-            <p className="text-[11px] font-semibold mt-4" style={{ color: "var(--primary)" }}>Tap to see details and a little encouragement</p>
-          </article>;
-        })}
-      </div>
-
-      {detailTask && <TaskDetails task={detailTask} onClose={() => { setDetailTask(null); setDeleteConfirm(null); }} onAdvance={() => advance(detailTask)} onEdit={() => { setModal(detailTask); setDetailTask(null); }} onDelete={() => { if (deleteConfirm === detailTask.id) { onDeleteTask(detailTask.id); setDetailTask(null); setDeleteConfirm(null); } else setDeleteConfirm(detailTask.id); }} />}
-      {detailTask && deleteConfirm === detailTask.id && <div className="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2 rounded-full px-4 py-2 text-xs font-bold text-white" style={{ background: "#d65d74" }}>Tap Delete task again to confirm</div>}
-      {modal && <TaskModal task={modal === "new" ? undefined : modal} onSave={modal === "new" ? onAddTask : (data) => onUpdateTask((modal as Task).id, data)} onClose={() => setModal(null)} />}
-    </div>
-  );
+  return <div className="flex flex-col h-full">
+    {toast && <ToastNotification toast={toast} onClose={() => setToast(null)} />}
+    <div className="px-4 sm:px-6 py-3 sm:py-4 border-b" style={{ borderColor: "var(--border)" }}><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2">
+      <select className="sm:hidden w-full text-sm font-bold rounded-xl px-3 py-2.5 outline-none" style={{ background: "var(--secondary)", color: "var(--foreground)", border: "1px solid var(--border)" }} value={filterStatus} onChange={(event) => setFilterStatus(event.target.value as FilterStatus)} aria-label="Filter tasks by status"><option value="all">All tasks</option><option value="todo">Todo</option><option value="in_progress">In progress</option><option value="done">Done</option></select>
+      <div className="hidden sm:flex items-center gap-1 shrink-0">{(["all", "todo", "in_progress", "done"] as const).map((status) => <button key={status} onClick={() => setFilterStatus(status)} className="text-[9px] sm:text-[10px] font-bold px-2.5 sm:px-3 py-2 rounded-xl whitespace-nowrap" style={{ background: filterStatus === status ? "var(--primary)" : "var(--secondary)", color: filterStatus === status ? "white" : "var(--muted-foreground)" }}>{status === "all" ? "ALL" : status === "todo" ? "TODO" : status === "in_progress" ? "IN PROGRESS" : "DONE"}</button>)}</div>
+      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:ml-1"><select className="text-[10px] rounded-xl px-2.5 py-2 outline-none shrink-0" style={{ background: "var(--secondary)", color: "var(--muted-foreground)", border: "1px solid var(--border)" }} value={filterPriority} onChange={(event) => setFilterPriority(event.target.value as Priority | "all")}><option value="all">ALL PRIORITIES</option><option value="critical">CRITICAL</option><option value="high">HIGH</option><option value="medium">MEDIUM</option><option value="low">LOW</option></select><select className="text-[10px] rounded-xl px-2.5 py-2 outline-none shrink-0" style={{ background: "var(--secondary)", color: "var(--muted-foreground)", border: "1px solid var(--border)" }} value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}><option value="score">PRIORITY SCORE</option><option value="due">DUE DATE</option><option value="priority">PRIORITY LEVEL</option><option value="created">NEWEST</option></select><button onClick={() => setModal("new")} className="sm:ml-auto text-sm font-bold px-4 py-2 rounded-xl whitespace-nowrap" style={{ background: "var(--primary)", color: "white" }}>+ New task</button></div>
+    </div></div>
+    <div className="px-4 sm:px-6 py-2"><span className="text-[10px] font-bold tracking-wider" style={{ color: "var(--muted-foreground)" }}>{sorted.length} TASK{sorted.length === 1 ? "" : "S"} FOR CHICHI</span></div>
+    <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-5 space-y-3">{sorted.length === 0 ? <div className="flex flex-col items-center justify-center h-full gap-2" style={{ color: "var(--muted-foreground)" }}><p className="text-sm">Nothing here yet. You are doing great, Chichi.</p></div> : sorted.map((task) => { const days = daysUntilDue(task.dueDate); const score = taskScore(task); return <article key={task.id} role="button" tabIndex={0} onClick={() => setDetailTask(task)} onKeyDown={(event) => event.key === "Enter" && setDetailTask(task)} className="task-card cursor-pointer rounded-2xl p-4 sm:p-5 transition-transform hover:-translate-y-0.5" style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 5px 15px rgba(146,80,105,.05)" }}><div className="flex items-start gap-3"><button onClick={(event) => { event.stopPropagation(); advance(task); }} className="mt-0.5 w-7 h-7 rounded-full grid place-items-center" style={{ background: "var(--secondary)" }} aria-label="Advance task status"><StatusDot status={task.status} /></button><div className="flex-1 min-w-0"><div className="flex justify-between gap-3"><h3 className={`text-base font-bold leading-snug ${task.status === "done" ? "line-through opacity-50" : ""}`}>{task.title}</h3>{task.status !== "done" && <span className="text-sm font-bold" style={{ color: "var(--primary)" }}>{score}</span>}</div><p className="text-xs mt-1.5 line-clamp-2 leading-relaxed" style={{ color: "var(--muted-foreground)" }}>{task.description || "Tap to view this task's details."}</p><div className="flex items-center gap-2 flex-wrap mt-3"><PriorityBadge priority={task.priority} /><DifficultyBadge difficulty={task.difficulty} /><span className={`text-[10px] font-semibold ${dueLabelClass(days)}`}>{dueLabel(days)}</span></div></div></div><p className="text-[11px] font-semibold mt-4" style={{ color: "var(--primary)" }}>Tap to see details and a little encouragement</p></article>; })}</div>
+    {detailTask && <TaskDetails task={detailTask} onClose={() => { setDetailTask(null); setDeleteConfirm(null); }} onAdvance={() => advance(detailTask)} onEdit={() => { setModal(detailTask); setDetailTask(null); }} onDelete={() => setDeleteConfirm(detailTask.id)} />}
+    {detailTask && deleteConfirm === detailTask.id && <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#493540]/30 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-task-title"><div className="w-full max-w-sm rounded-3xl p-6" style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 18px 50px rgba(73,53,64,.2)" }}><h3 id="delete-task-title" className="text-lg font-bold">Delete this task?</h3><p className="text-sm mt-2 leading-relaxed" style={{ color: "var(--muted-foreground)" }}>This will permanently remove “{detailTask.title}”. This action cannot be undone.</p><div className="flex gap-2 mt-6"><button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>Cancel</button><button onClick={confirmDelete} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style={{ background: "#d65d74" }}>Delete task</button></div></div></div>}
+    {modal && <TaskModal task={modal === "new" ? undefined : modal} onSave={modal === "new" ? onAddTask : (data) => onUpdateTask((modal as Task).id, data)} onSaved={modal !== "new" ? () => notify("Changes saved successfully.") : () => notify("Task created successfully.")} onClose={() => setModal(null)} />}
+  </div>;
 }
