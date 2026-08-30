@@ -1,5 +1,5 @@
 import type { AppState } from "../src/types"
-import { createClient, type RedisClientType } from "redis"
+import { createClient } from "redis"
 
 interface ApiRequest {
   method?: string
@@ -18,19 +18,24 @@ const PASSWORD = process.env.APP_PASSWORD || "ilovemysensen"
 
 const SEED_STATE: AppState = { tasks: [] }
 
-let redisClientPromise: Promise<RedisClientType> | null = null
+let redisClient: ReturnType<typeof createClient> | null = null
+let redisConnectPromise: Promise<void> | null = null
 
 async function getRedisCloudClient() {
   const url = process.env.REDIS_URL
   if (!url) return null
 
-  if (!redisClientPromise) {
-    const client = createClient({ url })
-    client.on("error", (error) => console.error("Redis Cloud error:", error))
-    redisClientPromise = client.connect().then(() => client as RedisClientType)
+  if (!redisClient) {
+    redisClient = createClient({ url })
+    redisClient.on("error", (error) => console.error("Redis Cloud error:", error))
   }
 
-  return redisClientPromise
+  if (!redisConnectPromise) {
+    redisConnectPromise = redisClient.connect()
+  }
+
+  await redisConnectPromise
+  return redisClient
 }
 
 function getRestRedisConfig() {
