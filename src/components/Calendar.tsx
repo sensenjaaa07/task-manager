@@ -1,11 +1,12 @@
 import { useState } from "react";
 import type { Task } from "../types";
 import { daysUntilDue } from "../scoring";
-import { PriorityBadge, StatusDot } from "./shared";
+import { PriorityBadge, StatusDot, SubjectBadge } from "./shared";
 import { PRIORITY_COLOR } from "./shared";
 
 interface Props {
   tasks: Task[];
+  subjects: import("../types").Subject[];
   onUpdateTask: (id: string, patch: Partial<Task>) => void;
 }
 
@@ -21,7 +22,7 @@ function getCalendarDays(year: number, month: number) {
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
-export default function Calendar({ tasks, onUpdateTask }: Props) {
+export default function Calendar({ tasks, subjects, onUpdateTask }: Props) {
   const now = new Date();
   const [viewYear, setViewYear] = useState(now.getFullYear());
   const [viewMonth, setViewMonth] = useState(now.getMonth());
@@ -120,14 +121,17 @@ export default function Calendar({ tasks, onUpdateTask }: Props) {
                   {day}
                 </span>
                 <div className="flex flex-wrap gap-0.5">
-                  {dayTasks.slice(0, 3).map((t) => (
-                    <span
-                      key={t.id}
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{ background: isSelected ? "rgba(255,255,255,0.7)" : PRIORITY_COLOR[t.priority] }}
-                      title={t.title}
-                    />
-                  ))}
+                  {dayTasks.slice(0, 3).map((t) => {
+                    const subject = subjects.find((item) => item.id === t.subjectId);
+                    return (
+                      <span
+                        key={t.id}
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ background: isSelected ? "rgba(255,255,255,0.7)" : subject?.color ?? PRIORITY_COLOR[t.priority] }}
+                        title={subject ? subject.name + ": " + t.title : t.title}
+                      />
+                    );
+                  })}
                   {dayTasks.length > 3 && (
                     <span className="mono text-[8px]" style={{ color: isSelected ? "rgba(255,255,255,0.7)" : "var(--muted-foreground)" }}>
                       +{dayTasks.length - 3}
@@ -191,6 +195,7 @@ export default function Calendar({ tasks, onUpdateTask }: Props) {
                       {task.title}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
+                      {subjects.find((item) => item.id === task.subjectId) && <SubjectBadge subject={subjects.find((item) => item.id === task.subjectId)!} />}
                       <PriorityBadge priority={task.priority} />
                       {days < 0 && (
                         <span className="mono text-[10px] text-red-400">{Math.abs(days)}d overdue</span>
