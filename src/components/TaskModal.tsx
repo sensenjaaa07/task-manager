@@ -4,8 +4,10 @@ import type { Task, Priority, Difficulty, Status, Subject } from "../types";
 interface Props {
   task?: Task;
   subjects: Subject[];
-  onSave: (data: Omit<Task, "id" | "createdAt">) => void;
-  onCreateSubject: (name: string, color: string) => Subject;
+  onSave: (
+    data: Omit<Task, "id" | "createdAt">,
+    newSubject?: Omit<Subject, "id">,
+  ) => void;
   onSaved?: () => void;
   onClose: () => void;
 }
@@ -15,7 +17,7 @@ const CREATE_SUBJECT_VALUE = "__create_subject__";
 const DEFAULT_SUBJECT_COLOR = "#E36B91";
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
-export default function TaskModal({ task, subjects, onSave, onCreateSubject, onSaved, onClose }: Props) {
+export default function TaskModal({ task, subjects, onSave, onSaved, onClose }: Props) {
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "medium");
@@ -34,8 +36,14 @@ export default function TaskModal({ task, subjects, onSave, onCreateSubject, onS
     if (!title.trim()) return;
 
     let resolvedSubjectId = subjectId || undefined;
+    let newSubject: Omit<Subject, "id"> | undefined;
 
     if (creatingSubject) {
+      if (task) {
+        setSubjectError("Create a new subject from the New Task form first.");
+        return;
+      }
+
       const name = newSubjectName.trim();
       const color = newSubjectColor.trim().toUpperCase();
 
@@ -48,8 +56,8 @@ export default function TaskModal({ task, subjects, onSave, onCreateSubject, onS
         return;
       }
 
-      const subject = onCreateSubject(name, color);
-      resolvedSubjectId = subject.id;
+      newSubject = { name, color };
+      resolvedSubjectId = undefined;
     }
 
     if (!task && !resolvedSubjectId) {
@@ -66,7 +74,7 @@ export default function TaskModal({ task, subjects, onSave, onCreateSubject, onS
       dueDate,
       tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
       subjectId: resolvedSubjectId,
-    });
+    }, newSubject);
     onClose();
     onSaved?.();
   }
