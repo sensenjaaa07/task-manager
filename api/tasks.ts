@@ -16,7 +16,7 @@ const TASKS_KEY = "chichi-dental-tasks"
 const USERNAME = process.env.APP_USERNAME || "Dr Carla"
 const PASSWORD = process.env.APP_PASSWORD || "ilovemysensen"
 
-const SEED_STATE: AppState = { tasks: [] }
+const SEED_STATE: AppState = { tasks: [], subjects: [] }
 
 let redisClient: ReturnType<typeof createClient> | null = null
 let redisConnectPromise: Promise<void> | null = null
@@ -119,6 +119,14 @@ function isAuthorized(request: ApiRequest) {
   return username === USERNAME && password === PASSWORD
 }
 
+function normalizeState(value: unknown): AppState {
+  const state = value as Partial<AppState>
+  return {
+    tasks: Array.isArray(state?.tasks) ? state.tasks : [],
+    subjects: Array.isArray(state?.subjects) ? state.subjects : [],
+  }
+}
+
 function isAppState(value: unknown): value is AppState {
   return Boolean(
     value &&
@@ -141,7 +149,7 @@ export default async function handler(
   try {
     if (request.method === "GET") {
       const state = await getState()
-      if (state) return response.status(200).json(state)
+      if (state) return response.status(200).json(normalizeState(state))
 
       await setState(SEED_STATE)
       return response.status(200).json(SEED_STATE)
@@ -151,8 +159,9 @@ export default async function handler(
       return response.status(400).json({ error: "Invalid task data." })
     }
 
-    await setState(request.body)
-    return response.status(200).json(request.body)
+    const nextState = normalizeState(request.body)
+    await setState(nextState)
+    return response.status(200).json(nextState)
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unable to access shared storage."
