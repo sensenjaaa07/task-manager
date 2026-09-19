@@ -1,4 +1,4 @@
-import type { Priority, Difficulty, Status } from "../types";
+import type { Priority, Difficulty, Status, Subject } from "../types";
 
 export const PRIORITY_LABEL: Record<Priority, string> = {
   critical: "CRITICAL",
@@ -53,6 +53,29 @@ export function DifficultyBadge({ difficulty }: { difficulty: Difficulty }) {
       }}
     >
       {difficulty.toUpperCase()}
+    </span>
+  );
+}
+
+function subjectTextColor(hex: string) {
+  const normalized = hex.replace("#", "");
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return "#ffffff";
+  const r = Number.parseInt(normalized.slice(0, 2), 16);
+  const g = Number.parseInt(normalized.slice(2, 4), 16);
+  const b = Number.parseInt(normalized.slice(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.62 ? "#493540" : "#ffffff";
+}
+
+export function SubjectBadge({ subject }: { subject: Subject }) {
+  return (
+    <span
+      className="mono text-[10px] font-semibold px-2 py-1 rounded-full inline-flex items-center gap-1.5"
+      style={{ background: subject.color, color: subjectTextColor(subject.color) }}
+      title={subject.name + " · " + subject.color}
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+      {subject.name}
     </span>
   );
 }
