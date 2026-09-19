@@ -156,12 +156,14 @@ export default function App() {
   const [view, setView] = useState<View>("dashboard")
   const {
     tasks,
+    subjects,
     isAuthenticated,
     loading,
     error,
     login,
     logout,
     addTask,
+    addSubject,
     updateTask,
     deleteTask,
   } = useTaskStore()
@@ -297,6 +299,7 @@ export default function App() {
           {view === "dashboard" && (
             <Dashboard
               tasks={tasks}
+              subjects={subjects}
               onUpdateTask={updateTask}
               onNavigate={setView}
             />
@@ -304,13 +307,15 @@ export default function App() {
           {view === "tasks" && (
             <Tasks
               tasks={tasks}
+              subjects={subjects}
               onAddTask={addTask}
+              onCreateSubject={addSubject}
               onUpdateTask={updateTask}
               onDeleteTask={deleteTask}
             />
           )}
           {view === "calendar" && (
-            <Calendar tasks={tasks} onUpdateTask={updateTask} />
+            <Calendar tasks={tasks} subjects={subjects} onUpdateTask={updateTask} />
           )}
         </div>
       </main>
