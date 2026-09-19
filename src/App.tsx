@@ -163,7 +163,6 @@ export default function App() {
     login,
     logout,
     addTask,
-    addSubject,
     updateTask,
     deleteTask,
   } = useTaskStore()
@@ -309,7 +308,6 @@ export default function App() {
               tasks={tasks}
               subjects={subjects}
               onAddTask={addTask}
-              onCreateSubject={addSubject}
               onUpdateTask={updateTask}
               onDeleteTask={deleteTask}
             />
