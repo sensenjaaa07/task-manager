@@ -267,7 +267,8 @@ export function useTaskStore() {
   const logout = () => {
     setCredentials(null)
     setStoredCredentials(null)
-    setState({ tasks: [] })
+    stateRef.current = { tasks: [], subjects: [] }
+    setState({ tasks: [], subjects: [] })
     setError(null)
   }
 
