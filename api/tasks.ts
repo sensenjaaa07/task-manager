@@ -27,7 +27,7 @@ async function getRedisCloudClient() {
 
   if (!redisClient) {
     redisClient = createClient({ url })
-    redisClient.on("error", (error) => console.error("Storage error:", error))
+    redisClient.on("error", (error: unknown) => console.error("Storage error:", error))
   }
 
   if (!redisConnectPromise) {
